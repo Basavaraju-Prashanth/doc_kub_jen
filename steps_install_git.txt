@@ -1,0 +1,34 @@
+The Steps to install the Git and Git hub repository
+
+1. Download the latest git version of software from the browser based on the windows version.
+URL : https://git-scm.com/download/win
+
+2. Click on the .exe file and you will be able to install latest git version by just click on next buttons.
+
+3. Once installed you can validate if git installed successfully by opening an command prompt / power shell,
+$git version
+git version 2.35.1.windows.2
+
+Also you can just type option git on the terminal and will be able to see all commands,
+$git
+
+4. Now you can create a git hub account by going to browser and URL ,
+URL: https://github.com/login
+
+We need to create a new organization 
+Setting - Organization - New Account 
+
+After creating a new setup , you can create the first repository,
+
+5. Create repository -> Provide a name without spaces -> Description -> Check box the README file.
+
+6. You repository on the github is created  and from code you can get the URL to clone in the local directory
+
+7. In your local git , type the command,
+$git clone https://URL
+
+8. You can check the current status using,
+$git status
+
+9. Another way to create a local repository is by running command,
+$git init --> This will create an empty repository.
