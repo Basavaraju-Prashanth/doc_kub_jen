@@ -1,36 +1,29 @@
-The Steps to install the Git and Git hub repository
+============================== Steps to install git and git hub ===========================
 
-1. Download the latest git version of software from the browser based on the windows version.
-URL : https://git-scm.com/download/win
+1. Download tthe latest version of git.
 
-2. Click on the .exe file and you will be able to install latest git version by just click on next buttons.
+2. Follow the install tabs to make sure git installed without issue and don't check the git credential manager option,
 
-3. Once installed you can validate if git installed successfully by opening an command prompt / power shell,
-$git version
-git version 2.35.1.windows.2
+3. After installation run the below command,
+$git version ==> This should provide the latest version value.
 
-Also you can just type option git on the terminal and will be able to see all commands,
-$git
+4. Go to the github login page from the browser and sign up.
 
-4. Now you can create a git hub account by going to browser and URL ,
-URL: https://github.com/login
+5. Once signup, go to setting and create a new organization with free tier.
 
-We need to create a new organization 
-Setting - Organization - New Account 
+6. Then create a new repository from the organization along with description and check box README file.
 
-After creating a new setup , you can create the first repository,
+7.  In the GIT CLI configure the user name and mail with below commands,
+$git config --global user.name ""
+$git config --global user.mail ""
 
-5. Create repository -> Provide a name without spaces -> Description -> Check box the README file.
+This will set the values as global and with out global option it will be set to local which overrides the gobal values,
 
-6. You repository on the github is created  and from code you can get the URL to clone in the local directory
+8. From the git hub account - settings - Developer settings - Personal access tokens - Generate New token - Save it locally.
 
-7. In your local git , type the command,
-$git clone https://URL
+9. Copy the URL from the github new created repository and clone it locally,
 
-8. You can check the current status using,
-$git status
+$git clone https://
 
-9. Another way to create a local repository is by running command,
-$git init --> This will create an empty repository.
+10. While pushing the local changes to remote it will ask for username and password where for password you need to provide the token.
 
-10 Checking.
