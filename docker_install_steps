@@ -1,0 +1,36 @@
+============================ Steps to install Docker on Centos 7 ====================================
+
+1. Copy the latest centos 7 iso file and store it locally.
+
+2. Create a new virtual machine with centos OS and configure the required details. Make sure vm has internet access.
+
+3. Uninstall old version or already installed docker,
+#yum remove docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-engine
+
+4. Set up the repository to install docker,
+#yum install -y yum-utils
+#yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+
+5. Install the docker contents,
+#yum install docker-ce docker-ce-cli containerd.io
+
+Make sure the keys matches from the offical docker website,
+https://docs.docker.com/engine/install/centos/
+
+6. After successful installation, run below commands to check docker working
+#systemctl status docker
+#systemctl start docker
+#systemctl enable docker
+
+7. #docker version 
+
+8. docker pull nginx  --This will pull the container from main docker hub
