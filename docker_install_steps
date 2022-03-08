@@ -34,3 +34,17 @@ https://docs.docker.com/engine/install/centos/
 7. #docker version 
 
 8. docker pull nginx  --This will pull the container from main docker hub
+
+==================== Steps to Install Docker Compose File ==============================
+
+1. Run the below command,
+#curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+2. Once Successful run the next command,
+#chmod +x /usr/local/bin/docker-compose
+
+3. Test the installation,
+#docker-compose --version
+docker-compose version 1.29.2, build 5becea4c
+
+
