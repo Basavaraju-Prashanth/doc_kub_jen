@@ -32,3 +32,5 @@ $git status
 
 9. Another way to create a local repository is by running command,
 $git init --> This will create an empty repository.
+
+10 Checking.
