@@ -1,0 +1,42 @@
+======== Steps to create a simple docker container ===============
+Let's create simple nginx container using the docker run command,
+#docker run --name nginx_container -p 5000:80 -d nginx
+
+-d option refers to run the container in the background
+-p option is port mapping from container to host where 5000 is port of the host and 80 is port of the container
+
+After container is created you can view the status of the container using,
+#docker ps --> This command list all current running container details
+
+#docker ps -a --> This commmand provide all containers that were executed.
+
+#docker inspect nginx_container --> This command provides complete details of the container
+
+#docker logs nginx_container --> This command provide log details of the container 
+
+#docker logs 
+
+Issues:
+
+After the container was created , when tried to view the portal through browser an error encounter as port forwarding not enabled.
+Added a new line under /etc/sysctl.conf file and restarted the network service
+
+#vi /etc/sysctl.conf
+net.ipv4.ip_forward=1
+
+#systemct restart network
+
+[root@demo learning]# docker ps
+CONTAINER ID   IMAGE     COMMAND                  CREATED         STATUS         PORTS                                   NAMES
+52d00455b538   nginx     "/docker-entrypoint.…"   3 minutes ago   Up 3 minutes   0.0.0.0:5000->80/tcp, :::5000->80/tcp   nginx
+
+#docker images --> List all images pulled from docker hub
+
+#docker stop nginx --> Stop the container
+
+#docker rm nginx --> Remove the container
+
+#docker rmi nginx --> Remove the image
+
+Image can only be removed after all containers part of the image are removed.
+
