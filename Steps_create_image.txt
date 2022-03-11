@@ -1,0 +1,19 @@
+==================== Steps to create an Image  and upload to docker hub =========================
+
+1. Create a new Dockerfile and update the contents.
+
+2. Now build the docker file as image using optional tag command,
+#docker build -t prashdoc/image_name -f Dockerfile .
+
+3. Can view the docker images using command,
+#docker images
+
+4. Now we can push to docker hub , we have login created under docker hub and validated email-address.
+
+5. From command line login to docker,
+#docker login
+
+6. Now push the image file to hub repository,
+#docker push prashdoc/image_name
+
+Once successful, can view the image in docker hub portal.
