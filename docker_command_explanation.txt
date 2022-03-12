@@ -1,0 +1,251 @@
+================================= Docker Commands with Explanation and Examples ==============================================
+
+1. attach --> allows to view the ongoing output  and it displays the output of ENTRYPOINT /CMD,this command bring the container execution to foreground
+
+[root@master learning]# docker run -d --name demo ubuntu /usr/bin/top -b
+42695577c6d608e63e64d582c36c4dbc31b33a1d07f488273ad51e7e2167cce5
+
+-d --> run in background
+--name --> name of the container
+ubuntu -->image name 
+/usr/bin/top --> command executed on the container
+
+Using attach command execution comes to foreground and we use either docker ID or docker name
+[root@master learning]# docker attach 42 
+42 -- ID of the container
+
+2. build --> Build a image using Dockerfile and context , context specify a set of files located in the specified PATH or URL.
+URL supports 3 ways,
+1. Git Repository.
+2. Pre-Packaged Tar balls
+3. Plain text files.
+
+GIT Method to create a image
+
+https://davelms.medium.com/build-your-docker-images-automatically-when-pushing-new-code-to-github-394f4c1679cc
+
+ 2.a Create a docker file in a empty folder and when run,
+     #docker build .
+     It creates a new image but without name and and tag details.
+	 REPOSITORY        TAG       IMAGE ID       CREATED              SIZE
+     <none>            <none>    fc40f144d972   About a minute ago   72.8MB
+	 Can create a container using the Image ID
+	 #docker run fc
+	 Delete container and remove the image
+	 #docker rm container_name
+	 Delete the image,
+	 #docker rmi fc
+
+ 2.b Create an image with tag option 
+     #docker build -t/--tag demo .
+	 It will build a new image with name demo
+	 REPOSITORY        TAG       IMAGE ID       CREATED          SIZE
+     demo              latest    281b46233033   20 seconds ago   72.8MB 
+
+ 2.c Create a image using file path using -f option
+     #docker build -t demo:1.0 -f /root/Dockerfile .
+	 
+
+3. commit --> This command allows you to create a new image from the container changes,it will not have data contained in the volume mounted inside the container.
+   [root@master etc]# docker run -d -it ubuntu   /bin/bash
+   [root@master etc]# docker ps
+   CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS                                   NAMES
+   23fce887ddd6   ubuntu    "/bin/bash"              17 seconds ago   Up 16 seconds                                           zealous_turing
+   
+   Go inside the container and create few files,
+   #docker exec -it 23 bash
+   
+   After creating files come out of the container and create a new image of the container,
+   #docker commit 23fce887ddd6 prashdoc/com_image:1.0
+   This will create a new image of the container and you can run the image 
+   #docker run -d -it prashdoc/com_image:1.0 
+   #docker exec -it docker_id bash
+   
+   You should be able to see all the newly added contents inside the new image.
+   
+   But it is recommended to build image using docker file.
+   
+4. context - Manages context
+   Commands:
+   #docker context create --> To create new context
+   #docker context inspect context_name -- To view the created context
+   #docker context ls --> List all the context
+   #docker context export -- To export context to tar
+   #docker context import --> to import the exported context
+   #docker context rm --> To remove the context
+   #docker context use --> To use the context created.
+   
+5. cp - command to copy data to and from the container, We can copy content from local machine to container and similarly copy contents from container back to local.
+        All cp command will be executed from local machine
+		1. Copy contents from local to container,
+		#docker cp /tmp/new-file nginx:/tmp/  --> Copies file new-file from local tmp folder to container nginx tmp folder
+		
+		2. Copy contents from container to local,
+		#docker cp nginx:/docker-entrypoint.sh /tmp/
+6. create - command a new writeable container and keep it ready to run when required, container ID is then printed to STDOUT. This is similar to docker run -d except the container is never started. You can then use the docker start <container_id> command to start the container at any point.
+       #docker create -v /data --name data ubuntu  --> Create a new container with volume mounted in the docker volume
+	   #docker run --rm --volumes-from data ubuntu ls -la /data  --> This will run the container and print all data inside the volume /data 
+	   
+	   #docker create -v /home/docker:/docker --name docker ubuntu  --> Create a new container with bind volume
+	   #docker run --rm --volumes-from docker ubuntu ls -la /docker  --> will run the container and display data in folder /home/docker and after exists of container will be removed
+
+7. diff - Inspect changes to files or directories on a container’s filesystem
+          A - A file or directory was added
+		  C - A file or directory was changed
+		  D - A file or directory was deleted
+		  
+		#docker diff nginx  --> List all details of modifications happened
+		[root@master docker]# docker diff nginx
+C /root
+A /root/.bash_history
+C /tmp
+A /tmp/new-file
+C /etc
+C /etc/nginx
+
+
+8. 	events - Get real time events from the server and it lists events of different object types
+    #docker events
+
+9. exec - command runs a new command in the running containers and it will run only if the primary process is PID 1. Command will run in the default directory of the container
+          We can change the directory and execute the command also command should be executable
+    # docker run --name ubuntu_bash --rm -i -t ubuntu bash  --> Creates a container named ubuntu_bash and goes into container as bash terminal
+    [root@master docker]# docker run -d --name ubuntu_bash ubuntu sleep 300
+    db8563e678cd2ac595079848e5b3a598163fdde5c8cadce19e67a08ede706427
+    [root@master docker]# docker exec -d ubuntu_bash touch /tmp/execWorks
+    [root@master docker]# docker exec -it ubuntu_bash ls -l /tmp/
+    total 0
+    -rw-r--r--. 1 root root 0 Mar 12 14:10 execWorks
+	
+	[root@master docker]# docker exec -it ubuntu_bash pwd
+    /
+	
+	[root@master docker]# docker exec -it -e VAR=1 ubuntu_bash bash
+    root@db8563e678cd:/# env | grep VAR
+    VAR=1	 
+	 But this value will only be for current session
+
+    [root@master docker]# docker exec -it -w /root ubuntu_bash pwd
+    /root	 
+    
+	 Moving to directory root
+	 
+10. history -- Commands show details of the image creation
+    #docker history nginx  --> Display hisotyr of the image
+
+11. images -- List images
+    #docker images 
+	
+	#docker images nginx --> List all images with tag nginx
+	
+	#docker images --no-trunc --> List full lenght image ID's
+	
+	#docker images --digests -- > Supported from V2 version, when image is push or pull from registry includes digest and we can use digest value to pull.
+	
+	#docker images --filter "dangling=true"  --> Shows un-tagged images
+	
+	#docker images --filter "before=image1" --> Display all images before image1
+	
+	#docker images --filter "since=image1"  --> Display all image since image1
+	
+12. info --> Display system wide information regarding docker installation, information includes kernel version , images, containers
+
+     #docker info
+	 
+	 #docker --debug info
+	 
+13. kill -- command to kill one or more containers,
+    #docker kill ubuntu
+	
+14. load - command loads an image from tar archive or STDIN
+    #docker load < busybox.tar.gz  -- From STDIN
+	
+	#docker load --input fedora.tar  -- From Path
+	
+15. login -- to log into docker registry
+    #docker login
+	
+16. logout -- logout from docker
+    #docker logout
+	
+17. logs --Display logs of the container
+    #docker logs nginx
+
+18. pause - pause one or more process in the container
+    #docker pause my_container
+	
+19. port -  List port mapping or specific mapping for a container
+    #docker port nginx
+	#docker port nginx 80/tcp
+	
+20. ps - List containers
+    #docker ps 
+	
+	#docker ps -a --> List all containers
+	
+	#docker ps -s --> Shows disk usage by container
+	
+21. pull -- pull image from the registry or repository
+    #docker pull nginx
+	
+22. push - push an image to docker registry
+    #docker push image_name
+	
+23. rename - rename the container
+    #docker rename cur_cont new_cont
+
+24. restart - restart the container
+    #docker restart nginx
+	
+25. rm - remove containers
+
+    # docker rm name
+	
+	#docker rm --force redis -- remove force
+	
+	#docker rm $(docker ps --filter status=exited -q)  -- to remove all stopped containers
+	
+	#docker rm -v demo -- remove container with volume and also it will be selectivie volume
+	
+26. rmi -- remove one or more images
+    #docker rmi image_name
+
+27  run - command first creates writeable layer and then start the container
+ 
+28. save - saves one or more images in tar archive
+    #docker save nginx > nginx.tar
+    #docker save --output=nginx.tar nginx
+
+29. search - command searches for images in the docker hub
+    #docker search busybox
+
+30. start - start one or more containers
+    #docker start container_name
+
+31. stats - Displays live stream of containers resource usage statistics
+    #docker stats
+
+32. stop - stop one or more containers
+  	#docker stop container_name
+
+33. system  - display system information
+    docker system df	Show docker disk usage
+    docker system events	Get real time events from the server
+    docker system info	Display system-wide information
+    docker system prune	Remove unused data	
+	
+34. top - display running process of the container
+    #docker top nginx
+	
+35. docker trust inspect	Return low-level information about keys and signatures
+    docker trust key	Manage keys for signing Docker images 
+    docker trust revoke	Remove trust for an image
+    docker trust sign	Sign an image
+    docker trust signer	Manage entities who can sign Docker images
+	
+36. unpause - unpause all porcess of the containers
+    #docker unpause container_name
+
+37. update - update configuration of one or more containers
+    #docker update --cpu-shares 512 -m 300M abebf7571666 hopeful_morse  -- updated cpu and memory on multiple containers
+	
