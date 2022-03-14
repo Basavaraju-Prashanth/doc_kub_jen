@@ -1,0 +1,142 @@
+================ Steps to Install Puppet Master and Agent =========================
+
+1. Create 2 VM's either using VMWare Workstation or Virtual Box 
+
+Configure the Master server with minimum of 2 GB of Memroy
+
+2. Add the hosts file entry in both the servers and make sure both are reachable using ping command
+
+3. Update the NTP service to latest if already installed or install the package fresh on both the servers,
+#yum install -y ntp
+
+4. Once installed on both servers, 
+#systemctl enable ntpd
+#systemctl restart ntpd
+#systemctl status ntpd
+
+5. Disable firewall on both the servers,
+#systemctl status firewalld
+#systemctl stop firewalld
+
+Once the basic installation is done the hosts should look like,
+On Master:
+==========
+[root@puppet ~]# cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+192.168.60.129 puppet
+192.168.60.131 agent
+
+
+On Agent:
+=========
+[root@agent ~]# cat /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+192.168.60.129 puppet
+192.168.60.131 agent
+
+
+============ On Master Node
+
+1. Run the below command to install the rpm puppetlabs,
+[root@puppet ~]# rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm
+
+2. On Successful installation , install the puppetserver
+[root@puppet ~]# yum install puppetserver
+
+3. After succesful installation of puppet server, try to bring up the service,
+#systemctl enable puppetserver.service
+#systemctl start puppetserver.service  --If this command fails with below status
+
+Job for puppetserver.service failed because the control process exited with error code. See "systemctl status puppetserver.service" and "journalctl -xe" for details.
+[root@puppet ~]# systemctl status puppetserver
+● puppetserver.service - puppetserver Service
+   Loaded: loaded (/usr/lib/systemd/system/puppetserver.service; disabled; vendor preset: disabled)
+   Active: activating (start) since Mon 2022-03-14 04:47:52 PDT; 4s ago
+  Control: 10290 (bash)
+    Tasks: 14
+   CGroup: /system.slice/puppetserver.service
+           ├─10290 bash /opt/puppetlabs/server/apps/puppetserver/cli/apps/start
+           ├─10298 /usr/bin/java -Xms2g -Xmx2g -XX:MaxPermSize=256m -Djava.security.egd=/dev/urandom -XX:OnOutOfMemoryError=kill -9 %p -cp /opt/puppetlabs/server/app...
+           └─10320 sleep 1
+
+Mar 14 04:47:52 puppet systemd[1]: Starting puppetserver Service...
+Mar 14 04:47:53 puppet puppetserver[10290]: OpenJDK 64-Bit Server VM warning: ignoring option MaxPermSize=256m; support was removed in 8.0
+
+4. Then the issue is with memory and modified the below parameter in file /etc/sysconfig/puppetserver
+Earlier:
+# Modify this if you'd like to change the memory allocation, enable JMX, etc
+JAVA_ARGS="-Xms2g -Xmx2g -XX:MaxPermSize=256m"
+
+After modification:
+# Modify this if you'd like to change the memory allocation, enable JMX, etc
+JAVA_ARGS="-Xms1g -Xmx1g -XX:MaxPermSize=256m"
+
+After modification again restart the puppetserver service it should be running
+
+5. Update the puppet.conf file under /etc/puppetlabs/puppet/ with entries
+certname = puppet
+
+ [main]
+ certname = puppet
+ server = puppet
+ environment = production
+ runinterval = 1h
+
+ 6. Restart the puppetserver service,
+ #systemctl restart puppetserver.service
+
+ ==================== On Puppet Agent,
+
+ 1. Run the command,
+ #rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm
+
+ 2. After successful installation run the puppet agent,
+ #yum install puppet-agent
+
+ 3. After successful installation , start the puppet service
+ #systemctl enable puppet.service
+ #systemctl start puppet.service
+
+ 4. Update the puppet.conf file under /etc/puppetlabs/puppet/ with entries
+ [main]
+    certname = agent
+    server = puppet
+    environment = production
+    runinterval = 1h
+
+ With the above steps both Puppet Master and Agent installation will be successful
+
+ On the Master node view for certificates waiting for signature,
+
+ #/opt/puppetlabs/bin/puppet cert list  --List all certificates waiting for sign
+
+If the 1st space is empty , then waiting to sign
+IF the 1st space is + then it is signed
+If the 1st space is -ve then the certficate is rejected 
+
+[root@puppet /]# /opt/puppetlabs/bin/puppet cert list
+  "agent"             (SHA256) 7B:DB:8E:F9:53:F9:C4:B5:44:FE:C6:70:BF:CD:E1:D7:B9:12:68:6F:52:C7:84:06:BC:BD:E7:19:CE:63:49:8A
+  "agent.localdomain" (SHA256) FD:7B:71:E7:74:4D:0D:0B:F0:5E:0E:32:AD:7F:74:0A:94:33:77:62:E0:55:70:FB:56:95:7D:C3:82:44:22:ED
+[root@puppet /]# /opt/puppetlabs/bin/puppet cert sign agent
+Signing Certificate Request for:
+  "agent" (SHA256) 7B:DB:8E:F9:53:F9:C4:B5:44:FE:C6:70:BF:CD:E1:D7:B9:12:68:6F:52:C7:84:06:BC:BD:E7:19:CE:63:49:8A
+Notice: Signed certificate request for agent
+Notice: Removing file Puppet::SSL::CertificateRequest agent at '/etc/puppetlabs/puppet/ssl/ca/requests/agent.pem'
+[root@puppet /]# /opt/puppetlabs/bin/puppet cert list
+  "agent.localdomain" (SHA256) FD:7B:71:E7:74:4D:0D:0B:F0:5E:0E:32:AD:7F:74:0A:94:33:77:62:E0:55:70:FB:56:95:7D:C3:82:44:22:ED
+[root@puppet /]# /opt/puppetlabs/bin/puppet cert list --all
+  "agent.localdomain"  (SHA256) FD:7B:71:E7:74:4D:0D:0B:F0:5E:0E:32:AD:7F:74:0A:94:33:77:62:E0:55:70:FB:56:95:7D:C3:82:44:22:ED
++ "agent"              (SHA256) 47:00:CF:F0:D5:AF:84:F7:FD:68:27:DF:36:A8:0C:05:B7:C4:6A:D0:E0:4D:05:99:D0:03:F4:04:9F:6F:21:29
++ "puppet"             (SHA256) ED:80:7F:69:05:45:BF:7F:C5:DC:83:23:73:D2:5D:A2:CD:C8:50:FB:8F:27:5E:5E:0D:06:2F:2A:63:22:23:0B (alt names: "DNS:puppet", "DNS:puppet")
++ "puppet.localdomain" (SHA256) ED:F4:A7:C2:1C:5C:F9:CC:9C:70:A9:6C:BA:B2:37:4D:FD:17:C8:4A:B1:00:F3:B9:43:38:C2:D4:D3:7E:79:09 (alt names: "DNS:puppet", "DNS:puppet.localdomain")
+
+On the Agent after sign run command,
+[root@agent ~]# /opt/puppetlabs/bin/puppet agent -t
+Info: Using configured environment 'production'
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for agent
+Info: Applying configuration version '1647265498'
+Notice: Applied catalog in 0.02 seconds
