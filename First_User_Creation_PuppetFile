@@ -1,0 +1,80 @@
+======= Steps to Create First Manifest File and Push them to Puppet Agent
+
+Create a new user and add the user in both puppet master and agent
+
+1. Create a new folders under,
+#cd /etc/puppetlabs/code/environments/production/modules
+#mkdir -p user_create/manifests
+#mkdir -p user_create/tests
+
+2. Create a new puppet file as all puppet files inside manifests use .pp file extensions
+#cd /etc/puppetlabs/code/environments/production/modules/user_create/manifests
+#vim init.pp
+class user_create{   -- Class Name and Module Name should be same
+
+  user {'john':                 -- Create new user john 
+       ensure => 'present',     -- Make sure it is created
+       home => '/root/john',    -- Home folder should be as mentioned
+       gid => 'developer',      -- User is attached to group developer
+       password => '$1$vNco1zXa$smqfIllgX/or/04MhvA1o.',  -- Password for John user
+       managehome => true,  -- Make sure the home folder exists
+
+  }
+
+  group {'developer':  -- Create new group developer
+        ensure => 'present', -- Make sure group created / exists
+  }
+
+  file {'/root/john':  -- Folder Name
+       ensure => 'directory', -- Check if folder exists
+  }
+
+}
+
+
+3. Create a new file under under,
+#cd /etc/puppetlabs/code/environments/production/modules/user_create/tests
+[root@puppet manifests]# cat ../tests/init.pp
+include user_create
+
+4. We can validated the manifests file,
+[root@puppet manifests]# /opt/puppetlabs/bin/puppet parser validate init.pp
+
+5. We can perform the testing with out implementing on master ,
+[root@puppet manifests]# puppet apply --noop ../tests/init.pp
+Notice: Compiled catalog for puppet in environment production in 0.12 seconds
+Notice: /Stage[main]/User_create/Group[developer]/ensure: current_value absent, should be present (noop)
+Notice: /Stage[main]/User_create/User[john]/ensure: current_value absent, should be present (noop)
+Notice: /Stage[main]/User_create/File[/root/john]/ensure: current_value absent, should be directory (noop)
+Notice: Class[User_create]: Would have triggered 'refresh' from 3 events
+Notice: Stage[main]: Would have triggered 'refresh' from 1 events
+Notice: Applied catalog in 0.04 seconds
+
+
+6. Now we can implemented on the master ,
+[root@puppet user_create]# /opt/puppetlabs/bin/puppet apply tests/init.pp
+Notice: Compiled catalog for puppet in environment production in 0.13 seconds
+Notice: /Stage[main]/User_create/Group[developer]/ensure: created
+Notice: /Stage[main]/User_create/User[john]/ensure: created
+Notice: Applied catalog in 0.32 seconds
+
+7. Now we can run on puppet agent by adding the below lines,
+[root@puppet manifests]# pwd
+/etc/puppetlabs/code/environments/production/manifests
+[root@puppet manifests]# cat site.pp
+node agent{
+ class { 'user_create': }
+}
+
+8. Now create the user in agent by running command,
+[root@agent ~]# /opt/puppetlabs/bin/puppet agent -t
+Info: Using configured environment 'production'
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for agent
+Info: Applying configuration version '1647269725'
+Notice: /Stage[main]/User_create/Group[developer]/ensure: created
+Notice: /Stage[main]/User_create/User[john]/ensure: created
+Notice: Applied catalog in 0.43 seconds
+
+
