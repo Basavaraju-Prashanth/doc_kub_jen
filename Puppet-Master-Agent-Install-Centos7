@@ -140,3 +140,79 @@ Info: Retrieving plugin
 Info: Caching catalog for agent
 Info: Applying configuration version '1647265498'
 Notice: Applied catalog in 0.02 seconds
+
+
+
+======= Add Multiple Agents installed with Puppet Master
+
+1. Create a new VM
+
+2. Update the hostname as agent2
+#hostnamectl set-hostname agent2 
+#reboot
+
+3. Update ntp package or install to latest version,
+#yum install -y ntp
+#systemctl enable ntpd
+#systemctl enable ntpdate
+
+4. Disable firewall
+#systemctl status firewalld.service
+#systemctl stop fiewwalld.service
+
+5. Install the puppet package,
+#update the hosts entries in both master and agent2
+#rpm -ivh https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm
+#yum install puppet-agent
+#systemctl enable puppet
+
+6. Update the configuration,
+#cd /etc/puppetlabs/puppet/
+#vi puppet.conf
+[main]
+    certname = agent2
+    server = puppet
+    environment = production
+    runinterval = 1h
+
+7. Start the puppet agent service,
+#systemctl start puppet
+
+On Master look for the certificate,
+#/opt/puppetlabs/bin/puppet cert list
+
+On List of certificates available to sign , select agent2
+#/opt/puppetlabs/bin/puppet cert sign agent2
+
+In case of running already created manifest then go to site.pp and add the node,
+#cd /etc/puppetlabs/code/environments/production/manifests
+vi site.pp
+node agent,agent2{
+ class { 'user_create': }
+}
+
+On Agent2,
+#/opt/puppetlabs/bin/puppet agent -t
+[root@agent2 ~]# /opt/puppetlabs/bin/puppet agent -t
+Info: Caching certificate for agent2
+Info: Caching certificate_revocation_list for ca
+Info: Caching certificate for agent2
+Info: Using configured environment 'production'
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Error: Could not retrieve catalog from remote server: Error 500 on SERVER: Server Error: Could not find node statement with name 'default' or 'agent2, agent2.localdomain' on node agent2
+Warning: Not using cache on failed catalog
+Error: Could not retrieve catalog; skipping run
+
+Error occured as the node was not added to site.pp file,
+
+[root@agent2 ~]# /opt/puppetlabs/bin/puppet agent -t
+Info: Using configured environment 'production'
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for agent2
+Info: Applying configuration version '1647357978'
+Notice: /Stage[main]/User_create/Group[developer]/ensure: created
+Notice: /Stage[main]/User_create/User[john]/ensure: created
+Info: Creating state file /opt/puppetlabs/puppet/cache/state/state.yaml
+Notice: Applied catalog in 0.11 seconds
