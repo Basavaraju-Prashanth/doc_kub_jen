@@ -1,0 +1,63 @@
+===== Steps to Create the Private Registry in the local
+
+Docker provides a build image registry:2 which will helps in setting up a private registry.
+
+You can do with by running the image locally or through docker compose file,
+
+Go to / folder and create a new docker compose file,
+version: '3'  -- Version of the docker compose file
+
+services:
+  registry:    -- service name
+    image: registry:2  -- image name
+    ports:
+    - "5000:5000"   -- port mapping 
+    environment:
+      REGISTRY_AUTH: htpasswd   
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/registry.password
+    volumes:
+      - ./auth:/auth  -- path / bind volume created under /auth
+
+
+create a new folder /auth and under /auth create a user and password,
+
+#yum install httpd-tools -- for centos
+#mkdir /auth
+#cd /auth
+#htpasswd -Bc registry.password testuser  -- this will prompt for password and provide the details
+
+How to create a local registry and push / pull from local private repository
+
+#docker run -it -d --name regitry -p 5000:5000 registry:2  --This will pull the image from docker hub and create container with name registry.
+
+We need to pull the image from docker and tag the image , push to localhost
+
+#docker pull alpine  --This will pull the image from docker hub
+#docker tag alpine localhost:5000/alpine-local 
+
+#docker images --List new images
+
+#docker push localhost:5000/alpine-local  -- Will push the image to local host
+
+#docker pull localhost:5000/alpine-local
+
+This will install the local image 
+
+#docker run -it --name local-image localhost:5000/alpine-local sh
+
+This will create the container
+
+---- Setting Up Authentication 
+
+After creating the password using htpassword and docker compose file 
+#docker-compose up -d  -- This will create the new container along with authentication set,
+
+#docker login localhost:5000 
+username:
+password:
+
+
+docker-compose--- Tutorial link -> https://www.toolsqa.com/docker/docker-compose/
+
+
