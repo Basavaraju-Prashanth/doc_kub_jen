@@ -1,0 +1,96 @@
+====== Puppet Examples
+
+1. Copying a file from master to agents
+
+Lets create a simple text file and copy that to specific folder in the agents
+
+a. Go to production module folder ad create a new folder,
+#cd /etc/puppetlabs/code/environments/production/modules/
+#mkdir -p copyfiles/{files,tests,manifests,templates}
+
+This will create a folder alone with sub folder
+[root@puppet modules]# tree copyfiles
+copyfiles
+├── files
+│   └── data.conf
+├── manifests
+│   └── init.pp
+├── templates
+└── tests
+    └── init.pp
+
+ b. Create the manifest file under manifests folder,
+ #cd copyfiles/manifests
+ #vi init.pp
+#cat copyfiles/manifests/init.pp
+class copyfiles{ -- Class Name and module name should be same
+
+file {'/tmp/data.conf':   -- Resource type is file and the path where it will be copied in agents
+     ensure => present,   
+     owner => root,  -- owner of the file
+     group => root, 
+     mode => '0777', -- permission of the file
+     source => 'puppet:///modules/copyfiles/data.conf',  -- path where the file will be stored in the master.
+    }
+}
+
+
+c. Create a new file under files folder with name specified in the manifests file,
+#cat copyfiles/files/data.conf
+This file will be copied from master to agents
+
+d. Include the file in the test folder,
+#cat copyfiles/tests/init.pp
+include copyfiles
+
+e. Validate the main manifests file,
+#/opt/puppetlabs/bin/puppet parser validate copyfiles/manifests/init.pp
+
+f. After validation test with implementation
+[root@puppet modules]# /opt/puppetlabs/bin/puppet apply --noop copyfiles/tests/init.pp
+Notice: Compiled catalog for puppet in environment production in 0.11 seconds
+Error: Parameter mode failed on File[/tmp/data.conf]: The file mode specification must be a string, not 'Fixnum' at /etc/puppetlabs/code/environments/production/modules/copyfiles/manifests/init.pp:3
+
+Error occured due to mode was mentioned as numerical value  it was missed to place the value as string inside single quotes('')
+
+After updating the value with quotes test passed
+
+[root@puppet modules]# /opt/puppetlabs/bin/puppet apply --noop copyfiles/tests/init.pp
+Notice: Compiled catalog for puppet in environment production in 0.06 seconds
+Notice: /Stage[main]/Copyfiles/File[/tmp/data.conf]/ensure: current_value absent, should be file (noop)
+Notice: Class[Copyfiles]: Would have triggered 'refresh' from 1 events
+Notice: Stage[main]: Would have triggered 'refresh' from 1 events
+Notice: Applied catalog in 0.08 seconds
+
+g. Update the site.pp file to apply on the agents,
+[root@puppet modules]# cat /etc/puppetlabs/code/environments/production/manifests/site.pp
+node agent,agent2{
+ class { 'user_create': }
+ class { 'copyfiles': }
+}
+
+On Agents ,
+
+[root@agent ~]# /opt/puppetlabs/bin/puppet agent -t
+Info: Using configured environment 'production'
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for agent
+Info: Applying configuration version '1647363089'
+Notice: /Stage[main]/Copyfiles/File[/tmp/data.conf]/ensure: defined content as '{md5}4f1036c115223a8e45f016d1cf57371a'
+Notice: Applied catalog in 0.10 seconds
+
+
+[root@agent2 ~]# /opt/puppetlabs/bin/puppet agent -t
+Info: Using configured environment 'production'
+Info: Retrieving pluginfacts
+Info: Retrieving plugin
+Info: Caching catalog for agent2
+Info: Applying configuration version '1647363119'
+Notice: /Stage[main]/Copyfiles/File[/tmp/data.conf]/ensure: defined content as '{md5}4f1036c115223a8e45f016d1cf57371a'
+Notice: Applied catalog in 0.08 seconds
+
+-rwxrwxrwx. 1 root   root       47 Mar 15 09:51 data.conf
+[root@agent2 ~]# cat /tmp/data.conf
+This file will be copied from master to agents
+
