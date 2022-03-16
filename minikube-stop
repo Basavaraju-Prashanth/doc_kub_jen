@@ -1,0 +1,22 @@
+=== minikube stop ===
+
+$ minikube status
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+
+$ minikube stop --all
+* Stopping node "minikube"  ...
+* 1 node stopped.
+
+
+$ minikube status
+minikube
+type: Control Plane
+host: Stopped
+kubelet: Stopped
+apiserver: Stopped
+kubeconfig: Stopped
