@@ -1,0 +1,97 @@
+================ PODS ==============
+
+Pods are the smallest deployable objects in kubernetes , Pods containers one or more containers with shared storage and network resource along with specification of how to run the container.
+
+Pods can be created from command line or using a yaml file,
+
+$kubectl run nginx --image=nginx 
+NAME              READY   STATUS    RESTARTS   AGE
+nginx             1/1     Running   0          39m
+
+Here,
+Name -> nginx
+Status -> Says Pod either in running state / down / container creating state
+Ready -> 1/1 where right side 1 is no of container in POD and left side 1 - Running container in POD
+Age -> Container up from last 39 minutes
+
+$kubectl get pods --> This displays all running pods
+
+$kubectl delete pods nginx --> Delete the running pods
+
+$kubectl describe pods nginx --> Display complete information of the Pod Nginx
+
+$kubectl logs nginx --> Log of nginx container
+
+$kubectl get pods -o wide --> Provide complete information along with nodes details,
+$kubectl.exe get pod -o wide
+NAME              READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+nginx             1/1     Running   0          44m   172.17.0.3   minikube   <none>           <none>
+
+Creating an yaml file and create the pod
+$ cat nginx-pod.yaml
+apiVersion: v1   -- Pod Version is v1
+kind: Pod -- Pod type container
+metadata:
+  name: nginx  --Name of the pod
+spec:
+  containers:
+   - name: nginx  --Name of the container
+     image: nginx -- Image of the container 
+
+Each YAML file created will have 4 fields by default,
+apiVersion  --Specify the version of Type
+Kind - Specify the type as either POD , Deployment, ReplicaSet , Service
+metadata - Specify the lable details
+spec - Specify the container details
+
+$ kubectl.exe apply -f nginx-pod.yaml
+
+or 
+
+$ kubectl.exe create -f nginx-pod.yaml
+pod/nginx created
+
+Another way of creating the yaml content is using 
+$kubectl.exe run redis-tag-image --image=redis:6.2 --dry-run=client -o yaml > redis-tag.yaml
+
+$ cat redis-tag.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: redis-tag-image
+  name: redis-tag-image
+spec:
+  containers:
+  - image: redis:6.2
+    name: redis-tag-image
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+$ cat redis-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis
+  labels:
+    app: my-redis
+spec:
+  containers:
+  - name: redis
+    image: redis
+
+ $ kubectl.exe get pods
+NAME              READY   STATUS    RESTARTS   AGE
+nginx             1/1     Running   0          58m
+redis             1/1     Running   0          54m
+redis-tag-image   1/1     Running   0          47m
+
+prash@LAPTOP-ULCKH2Q7 MINGW64 ~/Prash_Folder/Learning/Kubernetes_Learning
+$ kubectl.exe get pods -o wide
+NAME              READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+nginx             1/1     Running   0          58m   172.17.0.3   minikube   <none>           <none>
+redis             1/1     Running   0          54m   172.17.0.4   minikube   <none>           <none>
+redis-tag-image   1/1     Running   0          47m   172.17.0.5   minikube   <none>           <none>
