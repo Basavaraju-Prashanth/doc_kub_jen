@@ -1,0 +1,72 @@
+========= Steps to install Kubernetes ====
+1. Download the latest softwares for kubectl and kubernetes minikube from below paths,
+Kubectl - > https://kubernetes.io/docs/tasks/tools/install-kubectl-windows/
+minikube -> https://minikube.sigs.k8s.io/docs/start/
+
+2. Place the downloaded software inside a folder under C:/
+C:\Users\prash\kubernetes
+
+3. Update PATH  with these details,
+Start Button - Edit System Variable - Advance Setting - PATH - edit - New - C:\Users\prash\kubernetes\ - save - ok - ok
+
+4. Open command prompt and check the kubectl version to make sure it is working ,
+
+C:\Users\prash>kubectl version client
+Client Version: version.Info{Major:"1", Minor:"23", GitVersion:"v1.23.0", GitCommit:"ab69524f795c42094a6630298ff53f3c3ebab7f4", GitTreeState:"clean", BuildDate:"2021-12-07T18:16:20Z", GoVersion:"go1.17.3", Compiler:"gc", Platform:"windows/amd64"}
+Server Version: version.Info{Major:"1", Minor:"23", GitVersion:"v1.23.3", GitCommit:"816c97ab8cff8a1c72eccca1026f7820e93e0d25", GitTreeState:"clean", BuildDate:"2022-01-25T21:19:12Z", GoVersion:"go1.17.6", Compiler:"gc", Platform:"linux/amd64"}
+
+C:\Users\prash>kubectl version --client --output=yaml
+clientVersion:
+  buildDate: "2021-12-07T18:16:20Z"
+  compiler: gc
+  gitCommit: ab69524f795c42094a6630298ff53f3c3ebab7f4
+  gitTreeState: clean
+  gitVersion: v1.23.0
+  goVersion: go1.17.3
+  major: "1"
+  minor: "23"
+  platform: windows/amd64
+
+5. Try running the command as below ,
+$minikube start 
+
+There are no issue with the installation then wait for 5 - 10 minutes to finish the installation where it will automatically selects the driver.
+
+If it fails , then run as below,
+$minikube start --driver=virtualbox
+
+virtualbox the default driver:
+$minikube config set driver virtualbox
+
+6. Once minikube installation is successful, check below commands:
+C:\Users\prash>minikube status
+minikube
+type: Control Plane
+host: Running
+kubelet: Running
+apiserver: Running
+kubeconfig: Configured
+
+C:\Users\prash>kubectl cluster-info
+Kubernetes control plane is running at https://192.168.59.101:8443
+CoreDNS is running at https://192.168.59.101:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+7. Create a sample deployment to test the installation,
+
+$kubectl create deployment hello-minikube --image=k8s.gcr.io/echoserver:1.4  -> create depolyment
+
+$kubectl expose deployment hello-minikube --type=NodePort --port=8080 -> expose to port 8080
+
+$kubectl get services hello-minikube -> List all services
+
+$kubectl port-forward service/hello-minikube 7080:8080 -> Forwarding port
+
+You can view the application at http://localhost:7080
+
+Once data is visible can perform the clean up,
+
+$kubectl delete service/hello-minikube
+
+$kubectl delete deployment.apps/hello-minikube
+
+
