@@ -1,0 +1,58 @@
+=========== ReplicaSet ==============
+
+Replicaset make sure stable set of replica pods running at any point of time.
+
+Replicaset make use of selector field to identify pods it can acquire and no of replicas it should create or maintain for the pod.
+
+$ cat replicaset-definition.yaml
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: rs-def
+spec:
+  selector:
+    matchLabels:
+      app: redis-app
+  replicas: 4
+  template:
+    metadata:
+      name: redis-rs
+      labels:
+        app: redis-app
+    spec:
+      containers:
+      - name: redis-rs
+        image: redis:6.2
+
+ $ kubectl.exe create -f replicaset-definition.yaml
+replicaset.apps/rs-def created
+
+$ kubectl.exe get pods
+NAME           READY   STATUS    RESTARTS   AGE
+redis-rs       1/1     Running   0          26m
+rs-def-kfgvc   1/1     Running   0          13m
+rs-def-m9mkw   1/1     Running   0          13m
+rs-def-mjwdt   1/1     Running   0          13m
+
+$ kubectl.exe get replicaset
+NAME     DESIRED   CURRENT   READY   AGE
+rs-def   4         4         4       14m
+
+
+$ kubectl.exe get pods rs-def-kfgvc -o yaml
+To display yaml format
+
+$ kubectl.exe get pods rs-def-kfgvc -o yaml | grep -i IP
+  hostIP: 192.168.59.101
+  podIP: 172.17.0.5
+  podIPs:
+  - ip: 172.17.0.5
+
+$ kubectl.exe edit replicaset rs-def  --We can update the parameter and save which will automatically load but won't be updated in the yaml file
+replicaset.apps/rs-def edited
+
+$ kubectl.exe replace -f replicaset-definition.yaml -- Update the yaml file and use replace command to update
+replicaset.apps/rs-def replaced
+
+$ kubectl.exe scale --replicas=6 replicaset rs-def  -- another way to scale replica
+replicaset.apps/rs-def scaled
