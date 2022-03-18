@@ -1,0 +1,226 @@
+=================== Deployments ================
+
+Deployments provide declarative updates to Pods and ReplicaSet. In Deployment we describe desired state and deployment controller changes the actual state to desired state.
+
+Create a deployment,
+$ cat nginx-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+
+Once created , run the deployment file,
+$ kubectl.exe create -f nginx-deployment.yaml
+deployment.apps/nginx-deployment created --record
+
+$ kubectl.exe get deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   0/3     3            0           12s
+
+The above deployment is getting ready and can view the rollout status,
+$ kubectl.exe rollout status deployment/nginx-deployment
+Waiting for deployment "nginx-deployment" rollout to finish: 0 of 3 updated replicas are available...
+Waiting for deployment "nginx-deployment" rollout to finish: 1 of 3 updated replicas are available...
+Waiting for deployment "nginx-deployment" rollout to finish: 2 of 3 updated replicas are available...
+deployment "nginx-deployment" successfully rolled out
+
+
+$ kubectl.exe get deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   3/3     3            3           67s
+
+$ kubectl.exe get rs
+NAME                         DESIRED   CURRENT   READY   AGE
+nginx-deployment-9456bbbf9   3         3         3       73s
+
+$ kubectl.exe get pods
+NAME                               READY   STATUS    RESTARTS   AGE
+nginx-deployment-9456bbbf9-6fgcj   1/1     Running   0          79s
+nginx-deployment-9456bbbf9-n5hkc   1/1     Running   0          79s
+nginx-deployment-9456bbbf9-qgc66   1/1     Running   0          79s
+
+
+$ kubectl.exe describe deployment nginx-deployment
+Name:                   nginx-deployment
+Namespace:              default
+CreationTimestamp:      Thu, 17 Mar 2022 19:49:22 +0530
+Labels:                 app=nginx
+Annotations:            deployment.kubernetes.io/revision: 1
+Selector:               app=nginx
+Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge
+Pod Template:
+  Labels:  app=nginx
+  Containers:
+   nginx:
+    Image:        nginx:1.14.2
+    Port:         80/TCP
+    Host Port:    0/TCP
+    Environment:  <none>
+    Mounts:       <none>
+  Volumes:        <none>
+Conditions:
+  Type           Status  Reason
+  ----           ------  ------
+  Available      True    MinimumReplicasAvailable
+  Progressing    True    NewReplicaSetAvailable
+OldReplicaSets:  <none>
+NewReplicaSet:   nginx-deployment-9456bbbf9 (3/3 replicas created)
+Events:
+  Type    Reason             Age    From                   Message
+  ----    ------             ----   ----                   -------
+  Normal  ScalingReplicaSet  3m12s  deployment-controller  Scaled up replica set nginx-deployment-9456bbbf9 to 3
+
+--- Update the existing image to new version,
+
+2 ways ,
+$ kubectl.exe set image deployment/nginx-deployment nginx=nginx:1.16.1
+deployment.apps/nginx-deployment image updated
+
+or
+
+$kubectl edit deployment nginx-deployment
+
+$ kubectl.exe rollout status deployment/nginx-deployment
+Waiting for deployment "nginx-deployment" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "nginx-deployment" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "nginx-deployment" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "nginx-deployment" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "nginx-deployment" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "nginx-deployment" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "nginx-deployment" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "nginx-deployment" rollout to finish: 1 old replicas are pending termination...
+deployment "nginx-deployment" successfully rolled out
+
+The Rolling update happen with new pod create and remove old one with only one pod at time
+
+$ kubectl.exe get pods
+NAME                               READY   STATUS    RESTARTS   AGE
+nginx-deployment-ff6655784-9jn4v   1/1     Running   0          99s
+nginx-deployment-ff6655784-ffwzs   1/1     Running   0          38s
+nginx-deployment-ff6655784-m9w8w   1/1     Running   0          34s
+
+
+New pods are created and old pods are removed
+
+$ kubectl.exe describe deployment nginx-deployment | grep -i image
+    Image:        nginx:1.16.1
+
+Updated with latest image,
+
+prash@LAPTOP-ULCKH2Q7 MINGW64 ~/Prash_Folder/Learning/Kubernetes_Learning
+$ kubectl.exe get rs
+NAME                         DESIRED   CURRENT   READY   AGE
+nginx-deployment-9456bbbf9   0         0         0       9m31s
+nginx-deployment-ff6655784   3         3         3       5m8s
+
+ReplicaSet has removed old one and but has not deleted it
+
+
+$ kubectl.exe rollout history deployment/nginx-deployment
+deployment.apps/nginx-deployment
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+List all revision
+
+$ kubectl.exe rollout undo deployment/nginx-deployment
+deployment.apps/nginx-deployment rolled back
+
+Rollback to previous version.
+
+$ kubectl.exe rollout history deployment/nginx-deployment
+deployment.apps/nginx-deployment
+REVISION  CHANGE-CAUSE
+2         <none>
+3         <none>
+
+$ kubectl.exe rollout pause deployment/nginx-deployment
+deployment.apps/nginx-deployment paused
+
+Pause depolyments
+
+$ kubectl.exe rollout resume deployment/nginx-deployment
+deployment.apps/nginx-deployment resumed
+
+Resume deployments
+
+$ kubectl scale deployment/nginx-deployment --replicas=5
+deployment.apps/nginx-deployment scaled
+
+$ kubectl.exe get pods
+NAME                               READY   STATUS    RESTARTS   AGE
+nginx-deployment-9456bbbf9-9wfmb   1/1     Running   0          8m36s
+nginx-deployment-9456bbbf9-hr5pw   1/1     Running   0          5s
+nginx-deployment-9456bbbf9-jlzmk   1/1     Running   0          5s
+nginx-deployment-9456bbbf9-p85zq   1/1     Running   0          8m40s
+nginx-deployment-9456bbbf9-t6qzh   1/1     Running   0          8m33s
+
+$ kubectl.exe get rs
+NAME                         DESIRED   CURRENT   READY   AGE
+nginx-deployment-9456bbbf9   5         5         5       26m
+nginx-deployment-ff6655784   0         0         0       22m
+
+
+kubectl rollout undo deployment/frontend --to-revision=2         # Rollback to a specific revision
+kubectl rollout status -w deployment/frontend                    # Watch rolling update status of "frontend" deployment until completion
+kubectl rollout restart deployment/frontend                      # Rolling restart of the "frontend" deployment
+
+kubectl scale --current-replicas=2 --replicas=3 deployment/mysql  # If the deployment named mysql's current size is 2, 
+scale mysql to 3
+
+Another way to create a deployment, 
+$ kubectl.exe create deployment nginx --image=nginx  #creates a single pods
+deployment.apps/nginx created
+
+$ kubectl get deployment
+NAME    READY   UP-TO-DATE   AVAILABLE   AGE
+nginx   1/1     1            1           4m17s
+
+$ kubectl.exe get pods
+NAME                     READY   STATUS    RESTARTS   AGE
+nginx-85b98978db-hf8m2   1/1     Running   0          4m20s
+
+$ kubectl.exe get rs
+NAME               DESIRED   CURRENT   READY   AGE
+nginx-85b98978db   1         1         1       4m24s
+
+
+$ kubectl.exe scale deployment/nginx --replicas=3 #Now Scaled it to 3 Pod
+deployment.apps/nginx scaled
+
+$ kubectl get deployment
+NAME    READY   UP-TO-DATE   AVAILABLE   AGE
+nginx   3/3     3            3           5m5s
+
+$ kubectl.exe get pods
+NAME                     READY   STATUS    RESTARTS   AGE
+nginx-85b98978db-hf8m2   1/1     Running   0          5m10s
+nginx-85b98978db-kgvrs   1/1     Running   0          25s
+nginx-85b98978db-wp29g   1/1     Running   0          25s
+
+$ kubectl.exe get rs
+NAME               DESIRED   CURRENT   READY   AGE
+nginx-85b98978db   3         3         3       5m13s
+
+
