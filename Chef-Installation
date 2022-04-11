@@ -1,0 +1,148 @@
+================== Chef Workstation - Server - Node Installation =============
+
+Earlier we had chefdk installated as part of workstation set up , but now it is depreciated and going forward should make use of chef-workstation
+
+1. Download the latest chef-workstation rpm from below URL based on the environment your are planning to install the workstation,
+https://www.chef.io/downloads/tools/download/workstation?download=https://packages.chef.io/files/stable/chef-workstation/22.4.861/el/7/chef-workstation-22.4.861-1.el7.x86_64.rpm&os=Red%20Hat%20Enterprise%20Linux/CentOS%207&version=22.4.861
+
+2. run the rpm to install the workstation,
+#rpm ivh chef-workstation-22.4.861-1.el7.x86_64
+
+3. Confirm the installation running the below command,
+[root@localhost sample]# chef -v
+Chef Workstation version: 22.4.861
+Chef Infra Client version: 17.10.0
+Chef InSpec version: 4.56.19
+Chef CLI version: 5.6.1
+Chef Habitat version: 1.6.420
+Test Kitchen version: 3.2.2
+Cookstyle version: 7.32.1
+
+Next step is to set - up the chef server and establish connection between workstation and server,
+
+4. Go to below URL and click on get started,
+https://manage.chef.io/login
+
+Fill the required details and once your successful login ,
+
+Go To Administration and Create Organization and enter the details after which you can download the  starter kit.
+
+5. Copy the downloaded starter kit and put it on the workstation server under / or /root
+
+6. Unzip the starter kit and you see new directory created with name chef-repo.
+#unzip chef-starter.zip
+
+7. Now create a sample cookbook and upload to chef - server
+#cd /root/chef-repo/cookbooks/
+#knife cookbook generate sample   -- This will create a new cookbook with directory structure as below
+[root@localhost cookbooks]# cd sample/
+[root@localhost sample]# tree
+.
+├── CHANGELOG.md
+├── chefignore
+├── compliance
+│   ├── inputs
+│   ├── profiles
+│   ├── README.md
+│   └── waivers
+├── kitchen.yml
+├── LICENSE
+├── metadata.rb
+├── Policyfile.rb
+├── README.md
+├── recipes
+│   ├── default.rb
+│   └── text.txt
+└── test
+    └── integration
+        └── default
+            └── default_test.rb
+
+8 directories, 11 files
+
+Add the below contents inside receipe default.rb,
+#[root@localhost sample]# cat /root/chef-repo/cookbooks/sample/recipes/default.rb
+#
+# Cookbook:: sample
+# Recipe:: default
+#
+# Copyright:: 2022, The Authors, All Rights Reserved.
+file 'text.txt' do
+    content 'Welcome to Tecmint'
+end
+
+Run command on the workstation to upload cookbook to chef server,
+#knife cookbook upload sample
+
+Once command is successful we can go to chef server console and under policy can view the cookbook.
+
+
+8. Add node ,
+Create a new VM and run the below bootstrapping command to add the node which automatically install the chef,
+
+#knife bootstrap 192.168.60.136 --ssh-user root --ssh-password root123 --node-name chefNode1
+
+ [192.168.60.136] Thank you for installing Chef Infra Client! For help getting started visit https://learn.chef.io
+ [192.168.60.136] Starting the first Chef Infra Client Client run...
+ [192.168.60.136] +---------------------------------------------+
+✔ 2 product licenses accepted.
++---------------------------------------------+
+ [192.168.60.136] Chef Infra Client, version 17.10.3
+Patents: https://www.chef.io/patents
+Infra Phase starting
+ [192.168.60.136] Resolving cookbooks for run list: []
+ [192.168.60.136] Synchronizing cookbooks:
+ [192.168.60.136] Installing cookbook gem dependencies:
+Compiling cookbooks...
+ [192.168.60.136] Loading Chef InSpec profile files:
+Loading Chef InSpec input files:
+Loading Chef InSpec waiver files:
+[2022-04-11T04:03:12-07:00] WARN: Node chefNode1 has an empty run list.
+ [192.168.60.136] Converging 0 resources
+ [192.168.60.136]
+Running handlers:
+Running handlers complete
+Infra Phase complete, 0/0 resources updated in 25 seconds
+
+
+#[root@localhost .chef]# knife node list
+chefNode1
+
+9. Add cookbook to node,
+
+a. In the chef server console, Go to nodes and click on the node
+b. Select edit run list from the left panel and drag the available cookbook to current run list and save.
+
+10. Run the cookbook on the client
+#chef-client [root@localhost ~]# chef-client
+Chef Infra Client, version 17.10.3
+Patents: https://www.chef.io/patents
+Infra Phase starting
+Resolving cookbooks for run list: ["sample"]
+Synchronizing cookbooks:
+  - sample (0.1.0)
+Installing cookbook gem dependencies:
+Compiling cookbooks...
+Loading Chef InSpec profile files:
+Loading Chef InSpec input files:
+Loading Chef InSpec waiver files:
+Converging 1 resources
+Recipe: sample::default
+  * file[text.txt] action create
+    - create new file text.txt
+    - update content in file text.txt from none to b5b1ab
+    --- text.txt        2022-04-11 04:08:06.300197228 -0700
+    +++ ./.chef-text20220411-3446-3qc9lx.txt    2022-04-11 04:08:06.298197132 -0700
+    @@ -1 +1,2 @@
+    +Welcome to Tecmint
+    - restore selinux security context
+
+Running handlers:
+Running handlers complete
+Infra Phase complete, 1/1 resources updated in 32 seconds
+[root@localhost ~]# ll
+
+
+
+
+
