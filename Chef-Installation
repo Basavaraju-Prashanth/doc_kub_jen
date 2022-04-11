@@ -143,6 +143,20 @@ Infra Phase complete, 1/1 resources updated in 32 seconds
 [root@localhost ~]# ll
 
 
+[root@localhost chef-repo]# knife node list
+chefNode1
+[root@localhost chef-repo]# knife node show chefNode1
+Node Name:   chefNode1
+Environment: _default
+FQDN:        localhost
+IP:          192.168.60.136
+Run List:    recipe[sample]
+Roles:
+Recipes:     sample, sample::default
+Platform:    centos 7.9.2009
+Tags:
+
+
 
 
 
