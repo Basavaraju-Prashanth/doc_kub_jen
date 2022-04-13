@@ -1,0 +1,55 @@
+============= First Cookbook Creation ==============
+
+Create a new cookbook and install packag apache
+1. Create a new cookbook using,
+#chef cookbook generate apache
+
+2. Once create go inside folder,
+[root@chef-wrkstat chef-repo]# cat /root/chef-repo/cookbooks/apache/recipes/default.rb
+#
+# Cookbook:: apache
+# Recipe:: default
+#
+# Copyright:: 2022, The Authors, All Rights Reserved.
+package 'httpd' do
+  action :install
+end
+
+service 'httpd' do
+  action [ :enable, :start ]
+end
+
+cookbook_file "/var/www/html/index.html" do
+  source "index.html"
+  mode "0644"
+end
+
+This is the main part of the cookbook 
+Resources - package , service , coobook_file
+Action : install , enable , start
+
+Now we need to create the file so create a new directory,
+#mkdir -p /root/chef-repo/cookbooks/apache/files/
+#cd /root/chef-repo/cookbooks/apache/files/
+#cat index.html
+[root@chef-wrkstat chef-repo]# cat cookbooks/apache/files/index.html
+<html>
+<body>
+<h1>Welcome to Chef Main Page</h1>
+</body>
+</html>
+
+2. Now upload the cookbook to chef - server
+#knife upload cookbook apache
+
+3. Add the cookbook to runlist on node
+[root@chef-wrkstat chef-repo]# knife node run_list add chefNode1 apache
+chefNode1:
+  run_list:
+    recipe[sample]
+    recipe[apache]
+
+4. From chef-server console add the runlist to current runlist and save/submit
+
+5. From node run the command ,
+#chef-client   --> This will pull the contents from the chef-server and install the package
