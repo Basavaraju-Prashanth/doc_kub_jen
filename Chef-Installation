@@ -157,6 +157,10 @@ Platform:    centos 7.9.2009
 Tags:
 
 
+Below ports to be enabled
+[root@chef-node1 ~]# firewall-cmd --permanent --zone public --add-service http
+[root@chef-node1 ~]# firewall-cmd --permanent --zone public --add-service https
+#firewall-cmd --reload
 
 
 
