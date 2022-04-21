@@ -1,0 +1,217 @@
+================ Terraform  Variables =================
+
+[root@agent2 terraform-samples]# cat main.tf
+resource "local_file" "pet"{
+filename = var.filename
+content = var.content
+}
+
+[root@agent2 terraform-samples]# cat variables.tf
+variable "filename" {
+default = "/root/pet.txt"
+}
+variable "content" {
+default  = "My favourate pet is goldee"
+}
+
+[root@agent2 terraform-samples]# terraform validate
+Success! The configuration is valid
+
+Variable Type = List
+
+[root@agent2 terraform-samples]# cat main.tf
+resource "random_pet" "pet"{
+prefix = var.prefix[0]
+}
+[root@agent2 terraform-samples]# cat variables.tf
+variable "prefix" {
+type = list
+default = ["Mr","Sir"]
+description = "This will provied the prefix with name details"
+}
+
+Output: terraform apply
+local_file.pet: Destroying... [id=399ec9722e6fb9db5bb5f01ec410607b729b96a0]
+local_file.pet: Destruction complete after 0s
+random_pet.pet: Creating...
+random_pet.pet: Creation complete after 0s [id=Mr-driving-krill]
+
+
+Variable Type = Map
+
+[root@agent2 terraform-samples]# cat main.tf
+resource "local_file" "stat"{
+filename    = "/root/stat.txt"
+content = var.content["statement1"]
+}
+[root@agent2 terraform-samples]# cat variables.tf
+variable "content" {
+type = map
+default = {
+"statement1" = "This is statement1"
+"statement2" = "This is statement2"
+}
+}
+
+Output - terraform apply
+random_pet.pet: Destroying... [id=Mr-driving-krill]
+random_pet.pet: Destruction complete after 0s
+local_file.stat: Creating...
+local_file.stat: Creation complete after 0s [id=0883426cc58a340b9eb1b305ac8d2834a72de3dc]
+
+[root@agent2 terraform-samples]# cat /root/stat.txt
+This is statement1
+
+Variables of all types,
+
+[root@agent2 terraform-samples]# cat variables.tf
+variable "name" {
+type = string
+default = "Prashanth Basavaraju"
+}
+
+variable "gender" {
+type = list(string)
+default = ["Male","Female"]
+}
+
+variable "family" {
+type = list
+default = ["ved" , "ded" ,"ata"]
+}
+
+variable "age" {
+type = number
+default = 2
+}
+
+variable "files" {
+type = map
+default = {
+filename = "/root/prash.txt"
+content = "Ved is son of Prashanth \n"
+}
+}
+
+variable "relation" {
+type = list
+default = ["Son","Daughter"]
+}
+
+[root@agent2 terraform-samples]# cat main.tf
+output "father-name" {
+value = var.name
+}
+
+output "son-name" {
+value = var.family[0]
+}
+
+output "gender"{
+value = var.gender[0]
+}
+
+output "age" {
+value = var.age
+}
+
+output "relation" {
+value = var.relation[0]
+}
+
+resource "local_file" "prash"{
+filename   = var.files["filename"]
+content = var.files["content"]
+}
+
+Output -
+
+[root@agent2 terraform-samples]# terraform apply -auto-approve
+local_file.hello: Refreshing state... [id=0153bb3e01927bcd9f84385b0e14626a97323990]
+
+Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # local_file.prash will be created
+  + resource "local_file" "prash" {
+      + content              = <<-EOT
+            Ved is son of Prashanth
+        EOT
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/root/prash.txt"
+      + id                   = (known after apply)
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + age         = 2
+  + father-name = "Prashanth Basavaraju"
+  + gender      = "Male"
+  - name        = "Prashanth Basavaraju" -> null
+  + relation    = "Son"
+  + son-name    = "ved"
+local_file.prash: Creating...
+local_file.prash: Creation complete after 0s [id=04c644729b16f7a1323d493ba2d42650807ccb01]
+
+Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+age = 2
+father-name = "Prashanth Basavaraju"
+gender = "Male"
+relation = "Son"
+son-name = "ved"
+
+[root@agent2 terraform-samples]# terraform show
+# local_file.hello:
+resource "local_file" "hello" {
+    content              = "Welcome To Terraform, Have Fun!!"
+    directory_permission = "0777"
+    file_permission      = "0777"
+    filename             = "/root/hello.txt"
+    id                   = "0153bb3e01927bcd9f84385b0e14626a97323990"
+}
+
+# local_file.prash:
+resource "local_file" "prash" {
+    content              = <<-EOT
+        Ved is son of Prashanth
+    EOT
+    directory_permission = "0777"
+    file_permission      = "0777"
+    filename             = "/root/prash.txt"
+    id                   = "04c644729b16f7a1323d493ba2d42650807ccb01"
+}
+
+
+Outputs:
+
+age = 2
+father-name = "Prashanth Basavaraju"
+gender = "Male"
+relation = "Son"
+son-name = "ved"
+[root@agent2 terraform-samples]# cat /root/prash.txt
+Ved is son of Prashanth
+
+[root@agent2 terraform-samples]# terraform output
+age = 2
+father-name = "Prashanth Basavaraju"
+gender = "Male"
+relation = "Son"
+son-name = "ved"
+[root@agent2 terraform-samples]# terraform output age
+2
+[root@agent2 terraform-samples]# terraform output father-name
+"Prashanth Basavaraju"
+[root@agent2 terraform-samples]# terraform output gender
+"Male"
+[root@agent2 terraform-samples]# terraform output son-name
+"ved"
+[root@agent2 terraform-samples]# terraform output relation
+"Son"
